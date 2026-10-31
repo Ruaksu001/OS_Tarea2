@@ -2,23 +2,43 @@
 // construye el grafo, cada nodo guarda la lista de nodos con los que esta
 // conectado las casillas del 5x5 se conectan con la de la derecha y la de abajo y el triangulo se conecta a mano al final de grafo_iniciar()
 // como el grafo solo se escribe una vez al inicio del programa despues los threads solo lo leen
+// tambien arma el estado inicial del tablero (puma y perros) y lo imprime
 
 #include <stdio.h>
 #include <pthread.h>
 #include "tablero.h"
 
-typedef enum { // declaracion de los estados de una casilla
-INVALIDO = -1,
-VACIO = 0,
-PUMA = 1,
-PERRO = 2
-} EstadoCasilla;
+// funcion que pone una ficha en un nodo, el id 0 es el puma y del 1 al 12 son los perros
+static void colocar_ficha(Tablero *t, int id, int nodo) {
+    t->pos_ficha[id] = nodo;
 
+    if (id == ID_PUMA) {
+        t->casilla[nodo] = PUMA;
+    } else {
+        t->casilla[nodo] = PERRO;
+    }
+}
 
+// funcion que deja el tablero listo para empezar una partida
+void generar_tablero(Tablero *t) {
+    // partir con todas las casillas vacias
+    for (int n = 0; n < NUM_NODOS; n++) {
+        t->casilla[n] = VACIO;
+    }
 
-void generar_tablero() {
+    t->capturas = 0;
 
+    // el puma parte en el trono
+    colocar_ficha(t, ID_PUMA, NODO_TRONO);
 
+    // perros del 1 al 10 en las dos filas de abajo, casillas 15 a 24
+    for (int id = 1; id <= 10; id++) {
+        colocar_ficha(t, id, 14 + id);
+    }
+
+    // perros 11 y 12 en los extremos de la fila del medio
+    colocar_ficha(t, 11, 10);
+    colocar_ficha(t, 12, 14);
 }
 
 static int vecinos[NUM_NODOS][MAX_VECINOS]; // lista de vecinos de cada nodo
@@ -55,15 +75,15 @@ void grafo_iniciar(void) {
     // conexiones del triangulo base entre los dos nodos intermedios
     agregar_arista(NODO_IZQ, NODO_DER);
 
-    // los dos nodos intermedios con el trono (en diagonal)
+    // los dos nodos intermedios con el trono en diagonal
     agregar_arista(NODO_IZQ, NODO_TRONO);
     agregar_arista(NODO_DER, NODO_TRONO);
 
-    // nodo intermedio izquierdo esquina (diagonal) y casilla de abajo
+    // nodo intermedio izquierdo esquina diagonal y casilla de abajo
     agregar_arista(NODO_IZQ, 0);
     agregar_arista(NODO_IZQ, 1);
 
-    // nodo intermedio derecho casilla de abajo y esquina (diagonal)
+    // nodo intermedio derecho casilla de abajo y esquina diagonal
     agregar_arista(NODO_DER, 3);
     agregar_arista(NODO_DER, 4);
 
@@ -90,4 +110,44 @@ int son_vecinos(int a, int b) {
     }
 
     return 0;
+}
+
+// funcion que retorna que hay en un nodo
+EstadoCasilla estado_de(const Tablero *t, int nodo) {
+    if (nodo < 0 || nodo >= NUM_NODOS) {
+        return INVALIDO;
+    }
+
+    return t->casilla[nodo];
+}
+
+// funcion que convierte el estado de una casilla en el caracter que se imprime
+static char simbolo(EstadoCasilla estado) {
+    if (estado == PUMA) {
+        return 'P';
+    }
+
+    if (estado == PERRO) {
+        return 'o';
+    }
+
+    return '.';
+}
+
+// funcion que imprime el tablero, primero el triangulo y despues la cuadricula
+void imprimir_tablero(const Tablero *t, FILE *salida) {
+    fprintf(salida, "        %c\n", simbolo(t->casilla[NODO_TRONO]));
+    fprintf(salida, "    %c       %c\n", simbolo(t->casilla[NODO_IZQ]), simbolo(t->casilla[NODO_DER]));
+
+    for (int f = 0; f < FILAS; f++) {
+        for (int c = 0; c < COLUMNAS; c++) {
+            fprintf(salida, "%c", simbolo(t->casilla[f * COLUMNAS + c]));
+
+            if (c + 1 < COLUMNAS) {
+                fprintf(salida, "   ");
+            }
+        }
+
+        fprintf(salida, "\n");
+    }
 }
