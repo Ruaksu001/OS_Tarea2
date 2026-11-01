@@ -172,7 +172,7 @@ int obtener_movimientos_perro(const Tablero *t, int id_perro, int destinos_valid
         // se busca la id del vecino numero i desde el origen para buscarlo en el tablero
         int vecino = vecinos[origen][i];
         if (t->casilla[vecino] == VACIO) {
-            destinos_validos[total] = v; // guarda casilla libre en la lista
+            destinos_validos[total] = vecino; // guarda casilla libre en la lista
             total++; // aumenta la cantidad de vecinos libres
         }
     }
@@ -187,7 +187,7 @@ int mover_perro(Tablero *t, int id_perro, int destino) {
     if (id_perro < 1 || id_perro > NUM_PERROS) return 0;
 
     int origen = t->pos_ficha[id_perro];
-    id (origen == CAPTURADO) return 0;
+    if (origen == CAPTURADO) return 0;
 
     // verificar que el destino sea adyacente y este libre
     if (!son_vecinos(origen, destino) || t->casilla[destino] != VACIO) {

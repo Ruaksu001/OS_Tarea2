@@ -55,4 +55,10 @@ EstadoCasilla estado_de(const Tablero *t, int nodo);
 // imprime el tablero en la salida indicada (pantalla o archivo)
 void imprimir_tablero(const Tablero *t, FILE *salida);
 
+// retorna cantidad de movimientos posibles de un perro ademas de llenar el arreglo destinos validos
+int obtener_movimientos_perro(const Tablero *t, int id_perro, int destinos_validos[MAX_VECINOS]);
+
+// mueve un perro a otra posicion (destino) en el tablero
+int mover_perro(Tablero *t, int id_perro, int destino);
+
 #endif
