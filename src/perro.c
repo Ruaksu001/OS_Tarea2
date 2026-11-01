@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "perro.h"
 #include "tablero.h"
 #include <stdlib.h>
@@ -64,12 +65,13 @@ int mover_perro(Tablero *t, int id_perro, int destino) {
 // rutina que cada perro ejecuta continuamente de forma paralela (concurrente)
 void *rutina_perro(void *arg) {
   Perro *p = arg;
+  unsigned int seed = p->semilla; // semilla local del hilo para la aleatoriedad
 
   while (*p->partida_activa) {
 
     // esperar entre 50ms y 300ms
     int rango = p->delay_max - p->delay_min + 1;
-    int tiempo_ms = p->delay_min + (rand() % rango);
+    int tiempo_ms = p->delay_min + (rand_r(&seed) % rango);
     usleep(tiempo_ms * 1000);
 
     // seccion critica, se protege el tablero con mutex
@@ -88,7 +90,7 @@ void *rutina_perro(void *arg) {
     // si cantidad es mayor a 0 quiere decir que existe al menos una
     // posicion valida para moverse
     if (cantidad > 0) {
-      int destino = opciones[rand() % cantidad];
+      int destino = opciones[rand_r(&seed) % cantidad];
       mover_perro(p->tablero, p->id, destino);
     }
 
@@ -102,7 +104,7 @@ void *rutina_perro(void *arg) {
 // inicializa los perros y crea threads correspondientes
 void perros_iniciar(Perro perros[NUM_PERROS], Tablero *t,
                     pthread_mutex_t *mutex, volatile int *partida_activa,
-                    int delay_min, int delay_max) {
+                    int delay_min, int delay_max, unsigned int semilla_base) {
 
   for (int i = 0; i < NUM_PERROS; i++) {
     perros[i].id = i + 1; // la id va del 1 al 12
@@ -111,6 +113,7 @@ void perros_iniciar(Perro perros[NUM_PERROS], Tablero *t,
     perros[i].partida_activa = partida_activa;
     perros[i].delay_min = delay_min;
     perros[i].delay_max = delay_max;
+    perros[i].semilla = semilla_base + perros[i].id; // guarda la semilla base mas la id para que cada perro tenga la suya
 
     pthread_create(&perros[i].thread, NULL, rutina_perro, &perros[i]);
   }

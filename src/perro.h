@@ -11,6 +11,7 @@ typedef struct {
   volatile int *partida_activa; // flag que indica si el juego sigue en curso
   int delay_min;                // delay minimo de ciclo de decision
   int delay_max;                // delay maximo de ciclo de decision
+  unsigned int semilla;         // semilla local para aislar aleatoriedad
   pthread_t thread;             // id del thread
 } Perro;
 
@@ -28,7 +29,7 @@ void *rutina_perro(void *arg);
 // funcion que inicializa los perros y ejecuta un thread para cada uno
 void perros_iniciar(Perro perros[NUM_PERROS], Tablero *t,
                     pthread_mutex_t *mutex, volatile int *partida_activa,
-                    int delay_min, int delay_max);
+                    int delay_min, int delay_max, unsigned int semilla_base);
 
 // funcion que espera a que los 12 threads terminen
 void perros_esperar(Perro perros[NUM_PERROS]);

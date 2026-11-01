@@ -17,7 +17,18 @@ typedef struct {
   volatile int *partida_activa; // flag de estado de la partida
   int delay_min;
   int delay_max;
+  unsigned int semilla;         // semilla local para aislar aleatoriedad
   pthread_t thread;
 } Puma;
+
+void *rutina_puma(void *arg);
+
+// inicializa y ejecuta el thread del puma
+void puma_iniciar(Puma *puma, Tablero *t, pthread_mutex_t *mutex,
+                  volatile int *partida_activa, int delay_min, int delay_max,
+                  unsigned int semilla_base);
+
+// esperar a que termine el hilo del puma
+void puma_esperar(Puma *puma);
 
 #endif
