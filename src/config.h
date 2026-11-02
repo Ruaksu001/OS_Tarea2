@@ -21,4 +21,10 @@ typedef struct {
 // inicializar configuracion con valores por defecto
 void inicializar_config(Config *c);
 
+// parsear el config.txt
+static int parse_config(Config *c, const char *ruta);
+
+//
+int cargar_config(Config *c, int argc, char *argv[]);
+
 #endif

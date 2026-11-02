@@ -11,7 +11,7 @@ void inicializar_config(Config *c) {
     c->seed = (unsigned int)time(NULL); // la seed se genera en base al tiempo
 }
 
-static int parsear_config(Config *c, const char *ruta) {
+static int parse_config(Config *c, const char *ruta) {
     
     FILE *f = fopen(ruta, "r"); // leer el archivo desde la ruta ingresada como parametro
     if (!f) {
@@ -63,3 +63,8 @@ static int parsear_config(Config *c, const char *ruta) {
     return 1;
 
 } 
+
+
+int cargar_config(Config *c, int argc, char *argv[]) {
+
+}
