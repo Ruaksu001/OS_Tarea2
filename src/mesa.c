@@ -18,6 +18,8 @@ const char* mesa_nombre_resultado(int resultado) {
     if (resultado == GANA_PUMA) return "gana el puma";
     if (resultado == GANA_PERROS) return "ganan los perros";
     if (resultado == EMPATE) return "empate";
+    if (resultado == GANA_PUMA_ABANDONO) return "gana el puma (perros abandonaron)";
+    if (resultado == GANA_PERROS_ABANDONO) return "ganan los perros (puma abandono)";
     return "sin ganador";
 }
 
@@ -55,6 +57,9 @@ void mesa_iniciar(Mesa *m, int id, int delay_min, int delay_max, unsigned int se
 
     pthread_mutex_init(&m->mutex, NULL);
     generar_tablero(&m->tablero);
+    m->latido_puma = time(NULL);
+    m->latido_perros = time(NULL);
+
 }
 
 // se llama solo despues de hacer join a todos los hilos
@@ -109,7 +114,7 @@ static void registrar_movimiento(Mesa *m, const char *quien, int origen, int des
 // encapsula la logica de pedir movimiento para un perro
 int mesa_mover_perro(Mesa *m, int id_perro, unsigned int *semilla) {
     pthread_mutex_lock(&m->mutex);
-
+    m->latido_perros = time(NULL);
     // salir de inmediato si el juego termino o el perro ya fue comido
     if (!m->partida_activa || m->tablero.pos_ficha[id_perro] == CAPTURADO) {
         pthread_mutex_unlock(&m->mutex);
@@ -140,6 +145,7 @@ int mesa_mover_perro(Mesa *m, int id_perro, unsigned int *semilla) {
 // encapsula la logica de movimiento para el puma
 int mesa_mover_puma(Mesa *m, unsigned int *semilla) {
     pthread_mutex_lock(&m->mutex);
+    m->latido_puma = time(NULL);
 
     if (!m->partida_activa) {
         pthread_mutex_unlock(&m->mutex);
@@ -177,4 +183,38 @@ int mesa_mover_puma(Mesa *m, unsigned int *semilla) {
 
     pthread_mutex_unlock(&m->mutex);
     return TURNO_MOVIO;
+}
+
+// el juez llama a esto para ver si paso mucho tiempo sin que un bando se mueva
+void mesa_revisar_abandono(Mesa *m, int limite_segundos) {
+    pthread_mutex_lock(&m->mutex);
+    
+    // si el juego ya termino, no hace nada
+    if (!m->partida_activa) {
+        pthread_mutex_unlock(&m->mutex);
+        return;
+    }
+    
+    time_t ahora = time(NULL);
+    int abandono = 0;
+    
+    if (ahora - m->latido_puma >= limite_segundos) {
+        m->resultado = GANA_PERROS_ABANDONO;
+        abandono = 1;
+    } else if (ahora - m->latido_perros >= limite_segundos) {
+        m->resultado = GANA_PUMA_ABANDONO;
+        abandono = 1;
+    }
+    
+    // si alguien supero el limite de tiempo, el juez termina la partida
+    if (abandono) {
+        m->partida_activa = 0;
+        
+        pthread_mutex_lock(&log_mutex);
+        fprintf(m->salida, "[Mesa %d] fin por abandono: %s (inactividad superior a %d segundos)\n", 
+                m->id, mesa_nombre_resultado(m->resultado), limite_segundos);
+        pthread_mutex_unlock(&log_mutex);
+    }
+    
+    pthread_mutex_unlock(&m->mutex);
 }

@@ -19,6 +19,9 @@
 #define MAX_MOVIMIENTOS_DEFECTO 1000 // tope de movimientos si el parametro no es valido
 #define IMPRIMIR_CADA_DEFECTO 50     // cada cuantos movimientos se imprime el tablero si el parametro no es valido
 
+#define GANA_PUMA_ABANDONO 4   
+#define GANA_PERROS_ABANDONO 5 
+
 typedef struct {
     int id;                  // numero de la mesa
     Tablero tablero;         // tablero de esta partida
@@ -33,6 +36,9 @@ typedef struct {
     int delay_max;           // retardo maximo entre movimientos de una ficha (ms)
     unsigned int semilla;    // semilla base de la mesa, cada ficha usa esta mas su id
     FILE *salida;            // donde se escribe el log (pantalla o archivo)
+    time_t latido_puma;    // guarda el ultimo momento en que el puma intento moverse
+    time_t latido_perros;  // guarda el ultimo momento en que un perro intento moverse
+
 } Mesa;
 
 // prototipos
@@ -42,5 +48,6 @@ void mesa_destruir(Mesa *m);
 int mesa_mover_perro(Mesa *m, int id_perro, unsigned int *semilla);
 int mesa_mover_puma(Mesa *m, unsigned int *semilla);
 const char* mesa_nombre_resultado(int resultado);
+void mesa_revisar_abandono(Mesa *m, int limite_segundos);
 
 #endif
