@@ -44,11 +44,67 @@ void generar_tablero(Tablero *t) {
 static int vecinos[NUM_NODOS][MAX_VECINOS]; // lista de vecinos de cada nodo
 static int cantidad[NUM_NODOS];             // cuantos vecinos tiene cada nodo
 
+// un salto del puma, pasa por encima de la casilla medio y cae en destino
+typedef struct {
+    int medio;
+    int destino;
+} Salto;
+
+static Salto saltos[NUM_NODOS][MAX_SALTOS]; // saltos posibles del puma desde cada nodo
+static int cant_saltos[NUM_NODOS];          // cuantos saltos tiene cada nodo
+
 // funcion que conecta dos nodos en ambos sentidos
 static void agregar_arista(int a, int b) {
     vecinos[a][cantidad[a]++] = b;
     vecinos[b][cantidad[b]++] = a;
 }
+
+
+// funcion que registra un salto en ambos sentidos: de a hasta c pasando por b, y de c hasta a pasando por b
+static void agregar_salto(int a, int b, int c) {
+    saltos[a][cant_saltos[a]].medio = b;
+    saltos[a][cant_saltos[a]].destino = c;
+    cant_saltos[a]++;
+
+    saltos[c][cant_saltos[c]].medio = b;
+    saltos[c][cant_saltos[c]].destino = a;
+    cant_saltos[c]++;
+}
+
+// funcion que arma la tabla de saltos del puma, un salto es ir en linea recta por tres nodos seguidos
+static void saltos_iniciar(void) {
+    for (int n = 0; n < NUM_NODOS; n++) {
+        cant_saltos[n] = 0;
+    }
+
+    // saltos horizontales: tres casillas seguidas en la misma fila
+    for (int f = 0; f < FILAS; f++) {
+        for (int c = 0; c + 2 < COLUMNAS; c++) {
+            int n = f * COLUMNAS + c;
+            agregar_salto(n, n + 1, n + 2);
+        }
+    }
+
+    // saltos verticales: tres casillas seguidas en la misma columna
+    for (int f = 0; f + 2 < FILAS; f++) {
+        for (int c = 0; c < COLUMNAS; c++) {
+            int n = f * COLUMNAS + c;
+            agregar_salto(n, n + COLUMNAS, n + (2 * COLUMNAS));
+        }
+    }
+
+    // saltos del triangulo, el trono salta sobre los nodos intermedios hasta las esquinas
+    agregar_salto(NODO_TRONO, NODO_IZQ, 0);
+    agregar_salto(NODO_TRONO, NODO_DER, 4);
+
+    // el trono tambien salta hacia abajo sobre la casilla central de la fila de arriba
+    agregar_salto(NODO_TRONO, 2, 7);
+
+    // los nodos intermedios saltan hacia abajo sobre la casilla que tienen debajo
+    agregar_salto(NODO_IZQ, 1, 6);
+    agregar_salto(NODO_DER, 3, 8);
+}
+
 
 // funcion que construye todo el grafo del tablero
 void grafo_iniciar(void) {
@@ -89,6 +145,9 @@ void grafo_iniciar(void) {
 
     // el trono tambien baja directo a la casilla central de la fila de arriba
     agregar_arista(NODO_TRONO, 2);
+
+    // despues de las conexiones se arma la tabla de saltos del puma
+    saltos_iniciar();
 }
 
 // funcion que retorna cuantos vecinos tiene un nodo
@@ -111,6 +170,23 @@ int son_vecinos(int a, int b) {
 
     return 0;
 }
+
+
+// funcion que retorna cuantos saltos tiene un nodo
+int cantidad_saltos(int nodo) {
+    return cant_saltos[nodo];
+}
+
+// funcion que retorna la casilla que se salta en el salto numero i de un nodo
+int salto_medio(int nodo, int i) {
+    return saltos[nodo][i].medio;
+}
+
+// funcion que retorna la casilla donde cae el puma en el salto numero i de un nodo
+int salto_destino(int nodo, int i) {
+    return saltos[nodo][i].destino;
+}
+
 
 // funcion que retorna que hay en un nodo
 EstadoCasilla estado_de(const Tablero *t, int nodo) {

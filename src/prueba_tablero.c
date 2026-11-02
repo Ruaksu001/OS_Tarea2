@@ -33,6 +33,18 @@ int main(void) {
     }
 
     printf("perros en el tablero: %d\n", perros);
+    // imprimir los saltos del puma desde cada nodo (casilla que salta -> casilla donde cae)
+    printf("\n");
+    int total_saltos = 0;
+    for (int n = 0; n < NUM_NODOS; n++) {
+        printf("saltos desde %2d:", n);
+        for (int i = 0; i < cantidad_saltos(n); i++) {
+            printf(" %2d->%2d", salto_medio(n, i), salto_destino(n, i));
+            total_saltos++;
+        }
+        printf("\n");
+    }
+    printf("total de saltos: %d\n", total_saltos);
 
     return 0;
 }

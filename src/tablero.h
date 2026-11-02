@@ -19,6 +19,7 @@
 #define NUM_FICHAS 13  // el puma mas los 12 perros
 #define ID_PUMA 0      // el puma tiene id 0, los perros van del 1 al 12
 #define CAPTURADO -1   // posicion de un perro que ya fue capturado
+#define MAX_SALTOS 4   // maximo de saltos que puede hacer el puma desde un nodo
 
 typedef enum { // declaracion de los estados de una casilla
 INVALIDO = -1,
@@ -45,6 +46,15 @@ int vecino_de(int nodo, int i);
 
 //  ver si existe conexion entre nodos a y b
 int son_vecinos(int a, int b);
+
+// retorna cuantos saltos puede hacer el puma desde un nodo (sin mirar si hay perros)
+int cantidad_saltos(int nodo);
+
+// retorna la casilla que se salta en el salto numero i desde un nodo
+int salto_medio(int nodo, int i);
+
+// retorna la casilla donde cae el puma en el salto numero i desde un nodo
+int salto_destino(int nodo, int i);
 
 // deja el tablero con el puma en el trono y los 12 perros en su posicion inicial
 void generar_tablero(Tablero *t);
