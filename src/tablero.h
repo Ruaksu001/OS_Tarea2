@@ -20,6 +20,13 @@
 #define ID_PUMA 0      // el puma tiene id 0, los perros van del 1 al 12
 #define CAPTURADO -1   // posicion de un perro que ya fue capturado
 #define MAX_SALTOS 4   // maximo de saltos que puede hacer el puma desde un nodo
+#define CAPTURAS_PARA_GANAR 6 // perros que tiene que capturar el puma para ganar
+#define MOV_INVALIDO 0 // el movimiento no se pudo hacer
+#define MOV_SIMPLE 1   // el movimiento fue un paso a una casilla vecina
+#define MOV_CAPTURA 2  // el movimiento fue un salto que captura un perro
+#define SIN_GANADOR 0  // la partida sigue
+#define GANA_PUMA 1    // el puma capturo suficientes perros
+#define GANA_PERROS 2  // los perros dejaron al puma sin movimientos
 
 typedef enum { // declaracion de los estados de una casilla
 INVALIDO = -1,
@@ -64,6 +71,21 @@ EstadoCasilla estado_de(const Tablero *t, int nodo);
 
 // imprime el tablero en la salida indicada (pantalla o archivo)
 void imprimir_tablero(const Tablero *t, FILE *salida);
+
+// llena destinos con las casillas vecinas vacias a las que puede pasar el puma, retorna cuantas son
+int obtener_pasos_puma(const Tablero *t, int destinos[MAX_VECINOS]);
+
+// llena destinos con las casillas donde puede caer el puma al saltar sobre un perro, retorna cuantas son
+int obtener_saltos_puma(const Tablero *t, int destinos[MAX_SALTOS]);
+
+// mueve al puma a destino ya sea con un paso o con un salto que captura, retorna MOV_INVALIDO, MOV_SIMPLE o MOV_CAPTURA
+int mover_puma(Tablero *t, int destino);
+
+// retorna 1 si el puma no tiene ningun paso ni salto posible, 0 en caso contrario
+int puma_acorralado(const Tablero *t);
+
+// retorna SIN_GANADOR, GANA_PUMA o GANA_PERROS segun el estado actual del tablero
+int tablero_ganador(const Tablero *t);
 
 // retorna cantidad de movimientos posibles de un perro ademas de llenar el arreglo destinos validos
 int obtener_movimientos_perro(const Tablero *t, int id_perro, int destinos_validos[MAX_VECINOS]);

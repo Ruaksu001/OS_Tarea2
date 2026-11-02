@@ -228,3 +228,101 @@ void imprimir_tablero(const Tablero *t, FILE *salida) {
     }
 }
 
+// funcion que llena destinos con las casillas vecinas vacias a las que puede pasar el puma
+int obtener_pasos_puma(const Tablero *t, int destinos[MAX_VECINOS]) {
+    int origen = t->pos_ficha[ID_PUMA];
+    int total = 0;
+
+    for (int i = 0; i < cantidad[origen]; i++) {
+        int vecino = vecinos[origen][i];
+        if (t->casilla[vecino] == VACIO) {
+            destinos[total] = vecino;
+            total++;
+        }
+    }
+
+    return total;
+}
+
+// funcion que llena destinos con las casillas donde puede caer el puma al saltar sobre un perro
+int obtener_saltos_puma(const Tablero *t, int destinos[MAX_SALTOS]) {
+    int origen = t->pos_ficha[ID_PUMA];
+    int total = 0;
+
+    for (int i = 0; i < cant_saltos[origen]; i++) {
+        int medio = saltos[origen][i].medio;
+        int destino = saltos[origen][i].destino;
+
+        // el salto solo vale si hay un perro en el medio y la casilla de llegada esta libre
+        if (t->casilla[medio] == PERRO && t->casilla[destino] == VACIO) {
+            destinos[total] = destino;
+            total++;
+        }
+    }
+
+    return total;
+}
+
+// funcion que mueve al puma hacia una casilla entregada como parametro (destino)
+// puede ser un paso a una casilla vecina o un salto sobre un perro, que lo captura
+int mover_puma(Tablero *t, int destino) {
+    int origen = t->pos_ficha[ID_PUMA];
+
+    // el destino tiene que existir y estar libre
+    if (estado_de(t, destino) != VACIO) {
+        return MOV_INVALIDO;
+    }
+
+    // paso simple a una casilla vecina
+    if (son_vecinos(origen, destino)) {
+        t->casilla[origen] = VACIO;
+        t->casilla[destino] = PUMA;
+        t->pos_ficha[ID_PUMA] = destino;
+        return MOV_SIMPLE;
+    }
+
+    // salto, buscar en la tabla un salto desde el origen que caiga en el destino
+    for (int i = 0; i < cant_saltos[origen]; i++) {
+        int medio = saltos[origen][i].medio;
+
+        if (saltos[origen][i].destino == destino && t->casilla[medio] == PERRO) {
+            // buscar que perro esta en la casilla saltada y marcarlo como capturado
+            for (int id = 1; id <= NUM_PERROS; id++) {
+                if (t->pos_ficha[id] == medio) {
+                    t->pos_ficha[id] = CAPTURADO;
+                }
+            }
+
+            t->casilla[medio] = VACIO;
+            t->casilla[origen] = VACIO;
+            t->casilla[destino] = PUMA;
+            t->pos_ficha[ID_PUMA] = destino;
+            t->capturas++;
+            
+            return MOV_CAPTURA;
+        }
+    }
+
+    return MOV_INVALIDO;
+}
+
+// funcion que revisa si el puma se quedo sin pasos ni saltos
+int puma_acorralado(const Tablero *t) {
+    int pasos[MAX_VECINOS];
+    int saltos_validos[MAX_SALTOS];
+    
+    return obtener_pasos_puma(t, pasos) == 0 && obtener_saltos_puma(t, saltos_validos) == 0;
+}
+
+// funcion que revisa las condiciones de victoria, se llama despues de cada movimiento
+int tablero_ganador(const Tablero *t) {
+    if (t->capturas >= CAPTURAS_PARA_GANAR) {
+        return GANA_PUMA;
+    }
+
+    if (puma_acorralado(t)) {
+        return GANA_PERROS;
+    }
+
+    return SIN_GANADOR;
+}
