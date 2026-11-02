@@ -10,3 +10,56 @@ void inicializar_config(Config *c) {
     c->delay_max = 300; // retardo maximo por defecto = 300ms
     c->seed = (unsigned int)time(NULL); // la seed se genera en base al tiempo
 }
+
+static int parsear_config(Config *c, const char *ruta) {
+    
+    FILE *f = fopen(ruta, "r"); // leer el archivo desde la ruta ingresada como parametro
+    if (!f) {
+        perror("Error al ejecutar config.txt");
+        return 0;
+    }
+
+    // buffer que almacena cada linea
+    char linea[256];
+
+    // ciclo que lee linea por linea hasta EOF
+    while (fgets(linea, sizeof(linea), f)) {
+        
+        // para recorrer los caracteres se usa un puntero
+        char *ptr = linea;
+
+        // el puntero se salta los espacios y los tabs
+        while(*ptr == ' ' || *ptr == '\t') {
+            ptr++;
+        }
+
+        // ignorar comentarios, saltos de linea y fin de cadena \0
+        if (*ptr == '#' || *ptr == '\n' || *ptr == '\0') {
+            continue;
+        }
+
+        char setting[64]; // nombre del setting (configuracion)
+
+        // extraer nombre del setting hasta el signo = o un espacio y descartar lineas con mal formato
+        if (sscanf(ptr, "%63[^= \t]", setting) != 1) {
+            continue;
+        }
+
+        char *igual = strchr(ptr, '='); // primera ocurrencia de = en la linea
+        if (!igual) continue;
+        char *val = igual + 1; // el valor empieza despues del =
+
+        if (strcmp(setting, "delay_min") == 0) {
+            c->delay_min = atoi(val);
+        } else if (strcmp(setting, "delay_max") == 0) {
+            c->delay_max = atoi(val);
+        } else if (strcmp(setting, "seed") == 0) {
+            c->seed = (unsigned int)strtoul(val, NULL, 10);
+        }
+
+    }
+
+    fclose(f);
+    return 1;
+
+} 
