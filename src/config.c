@@ -73,7 +73,7 @@ int cargar_config(Config *c, int argc, char *argv[]) {
     inicializar_config(c);
 
     // validar que el input tenga al menos n y m
-    if (argc > 3) {
+    if (argc < 3) {
         fprintf(stderr, "Uso %s N M [config.txt]\n", argv[0]);
         return 0;
     }
