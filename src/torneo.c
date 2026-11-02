@@ -264,10 +264,17 @@ static void *rutina_matchmaker(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        fprintf(stderr, "Uso: %s N M [config.txt]\n", argv[0]);
+
+    // cargar configuracion
+    if (!cargar_config(&config, argc, argv)) {
         return 1;
     }
+
+    int n = config.n_jugadores;
+    int m = config.m_mesas;
+
+    // iniciar semilla aleatoria
+    srand(config.seed);
 
     // capturar Ctrl+C
     struct sigaction sa;
@@ -277,12 +284,6 @@ int main(int argc, char *argv[]) {
     sigaction(SIGINT, &sa, NULL);
 
     grafo_iniciar();
-
-    inicializar_config(&config);
-
-    // por ahora N y M se leen directo de los argumentos, cuando cargar_config este lista se cambia
-    int n = atoi(argv[1]);
-    int m = atoi(argv[2]);
 
     if (n <= 0 || m <= 0) {
         fprintf(stderr, "Error: N y M deben ser enteros positivos\n");

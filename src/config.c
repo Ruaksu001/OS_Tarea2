@@ -92,7 +92,7 @@ int cargar_config(Config *c, int argc, char *argv[]) {
 
     // en caso de que se entregue un config.txt
     // es opcional por lo que el programa se ejecuta igual
-    if (argc >= 3) {
+    if (argc >= 4) {
         if (!parse_config(c, argv[3])) {
             fprintf(stderr,
                     "No se pudo leer archivo de configuracion '%s', usando valores "
