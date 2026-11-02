@@ -20,7 +20,7 @@ int obtener_movimientos_perro(const Tablero *t, int id_perro, int destinos_valid
 
     int total = 0;
     // saca numero de vecinos segun valor de adyacencia de la posicion de origen
-    int n_vecinos = cantidad_vecinos(origen); 
+    int n_vecinos = cantidad_vecinos(origen);
 
     for (int i = 0; i < n_vecinos; i++) {
         // se busca la id del vecino numero i desde el origen para buscarlo en el tablero

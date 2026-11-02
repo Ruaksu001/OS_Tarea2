@@ -6,11 +6,11 @@
 #include <pthread.h>
 
 typedef struct {
-    int id;                // id del perro
-    Mesa *mesa;            // puntero a la mesa donde juega
-    unsigned int semilla;  // semilla local para aislar aleatoriedad
-    pthread_t thread;      // id del thread
-    int creado;            // 1 si el thread se creo bien, 0 si no
+    int id;               // id del perro
+    Mesa *mesa;           // puntero a la mesa donde juega
+    unsigned int semilla; // semilla local para aislar aleatoriedad
+    pthread_t thread;     // id del thread
+    int creado;           // 1 si el thread se creo bien, 0 si no
 } Perro;
 
 // llena destinos_validos con las casillas vacias adyacentes al perro

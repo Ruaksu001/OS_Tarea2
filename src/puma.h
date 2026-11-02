@@ -9,7 +9,7 @@ typedef struct {
     Mesa *mesa;           // puntero a la mesa donde juega
     unsigned int semilla; // semilla local para aislar aleatoriedad
     pthread_t thread;
-    int creado;           // 1 si el thread se creo bien, 0 si no
+    int creado; // 1 si el thread se creo bien, 0 si no
 } Puma;
 
 void *rutina_puma(void *arg);

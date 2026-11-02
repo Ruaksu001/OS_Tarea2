@@ -1,9 +1,8 @@
 // prueba_tablero.c prueba el tablero a medida que se agregan funciones, no es parte del torneo final
 // por ahora imprime la lista de vecinos de cada nodo y el tablero inicial
 
-#include <stdio.h>
 #include "tablero.h"
-
+#include <stdio.h>
 
 // deja el tablero sin fichas, con todos los perros capturados (solo para armar escenarios de prueba)
 static void vaciar_tablero(Tablero *t) {
@@ -24,7 +23,6 @@ static void poner_ficha(Tablero *t, int id, int nodo) {
     t->pos_ficha[id] = nodo;
     t->casilla[nodo] = (id == ID_PUMA) ? PUMA : PERRO;
 }
-
 
 int main(void) {
     Tablero t;
@@ -67,7 +65,7 @@ int main(void) {
         printf("\n");
     }
     printf("total de saltos: %d\n", total_saltos);
-    
+
     // prueba de movimientos del puma: dos pasos y despues un salto que captura al perro 1
     printf("\n");
     printf("paso 27 -> 2: %d (esperado 1)\n", mover_puma(&t, 2));
@@ -75,7 +73,7 @@ int main(void) {
     poner_ficha(&t, 1, 12);
     poner_ficha(&t, 3, 13);
     imprimir_tablero(&t, stdout);
-    
+
     printf("salto 7 -> 17: %d (esperado 2)\n", mover_puma(&t, 17));
     printf("capturas: %d, perro 1 capturado: %d\n", t.capturas, t.pos_ficha[1] == CAPTURADO);
     printf("movimiento invalido 17 -> 27: %d (esperado 0)\n", mover_puma(&t, 27));
@@ -88,7 +86,7 @@ int main(void) {
     poner_ficha(&t, 2, 23);
     poner_ficha(&t, 3, 14);
     poner_ficha(&t, 4, 22);
-    
+
     printf("\n");
     imprimir_tablero(&t, stdout);
     printf("acorralado: %d, ganador: %d (esperado 1 y 2)\n", puma_acorralado(&t), tablero_ganador(&t));
@@ -101,6 +99,5 @@ int main(void) {
     t.capturas = CAPTURAS_PARA_GANAR;
     printf("ganador con 6 capturas: %d (esperado 1)\n", tablero_ganador(&t));
 
-    
     return 0;
 }

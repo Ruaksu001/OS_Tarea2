@@ -11,21 +11,24 @@
 // mutex global para el logeo, evita que dos mesas mezclen lineas en el archivo de salida
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
-
 // funcion que retorna el texto asociado al resultado
-const char* mesa_nombre_resultado(int resultado) {
-    if (resultado == GANA_PUMA) return "gana el puma";
-    if (resultado == GANA_PERROS) return "ganan los perros";
-    if (resultado == EMPATE) return "empate";
-    if (resultado == GANA_PUMA_ABANDONO) return "gana el puma (perros abandonaron)";
-    if (resultado == GANA_PERROS_ABANDONO) return "ganan los perros (puma abandono)";
+const char *mesa_nombre_resultado(int resultado) {
+    if (resultado == GANA_PUMA)
+        return "gana el puma";
+    if (resultado == GANA_PERROS)
+        return "ganan los perros";
+    if (resultado == EMPATE)
+        return "empate";
+    if (resultado == GANA_PUMA_ABANDONO)
+        return "gana el puma (perros abandonaron)";
+    if (resultado == GANA_PERROS_ABANDONO)
+        return "ganan los perros (puma abandono)";
     return "sin ganador";
 }
 
 // inicializa la mesa guardando los parametros del config y preparando el mutex
-void mesa_iniciar(Mesa *m, int id, int delay_min, int delay_max, unsigned int semilla,
-                  int max_movimientos, int imprimir_cada, FILE *salida) {
+void mesa_iniciar(Mesa *m, int id, int delay_min, int delay_max, unsigned int semilla, int max_movimientos,
+                  int imprimir_cada, FILE *salida) {
     m->id = id;
 
     // si pasan los retardos invertidos, se arreglan solos
@@ -59,7 +62,6 @@ void mesa_iniciar(Mesa *m, int id, int delay_min, int delay_max, unsigned int se
     generar_tablero(&m->tablero);
     m->latido_puma = time(NULL);
     m->latido_perros = time(NULL);
-
 }
 
 // se llama solo despues de hacer join a todos los hilos
@@ -74,11 +76,10 @@ static void registrar_movimiento(Mesa *m, const char *quien, int origen, int des
     // orden fijo de locks: mesa primero, log despues (evita deadlocks)
     pthread_mutex_lock(&log_mutex);
     if (es_captura) {
-        fprintf(m->salida, "[Mesa %d] mov %d: %s %d -> %d (captura, total %d)\n",
-                m->id, m->movimientos, quien, origen, destino, m->tablero.capturas);
+        fprintf(m->salida, "[Mesa %d] mov %d: %s %d -> %d (captura, total %d)\n", m->id, m->movimientos, quien, origen,
+                destino, m->tablero.capturas);
     } else {
-        fprintf(m->salida, "[Mesa %d] mov %d: %s %d -> %d\n",
-                m->id, m->movimientos, quien, origen, destino);
+        fprintf(m->salida, "[Mesa %d] mov %d: %s %d -> %d\n", m->id, m->movimientos, quien, origen, destino);
     }
     pthread_mutex_unlock(&log_mutex);
 
@@ -105,8 +106,8 @@ static void registrar_movimiento(Mesa *m, const char *quien, int origen, int des
         pthread_mutex_lock(&log_mutex);
         fprintf(m->salida, "[Mesa %d] tablero final:\n", m->id);
         imprimir_tablero(&m->tablero, m->salida);
-        fprintf(m->salida, "[Mesa %d] fin de la partida: %s (capturas: %d, movimientos: %d)\n",
-                m->id, mesa_nombre_resultado(m->resultado), m->tablero.capturas, m->movimientos);
+        fprintf(m->salida, "[Mesa %d] fin de la partida: %s (capturas: %d, movimientos: %d)\n", m->id,
+                mesa_nombre_resultado(m->resultado), m->tablero.capturas, m->movimientos);
         pthread_mutex_unlock(&log_mutex);
     }
 }
@@ -188,16 +189,16 @@ int mesa_mover_puma(Mesa *m, unsigned int *semilla) {
 // el juez llama a esto para ver si paso mucho tiempo sin que un bando se mueva
 void mesa_revisar_abandono(Mesa *m, int limite_segundos) {
     pthread_mutex_lock(&m->mutex);
-    
+
     // si el juego ya termino, no hace nada
     if (!m->partida_activa) {
         pthread_mutex_unlock(&m->mutex);
         return;
     }
-    
+
     time_t ahora = time(NULL);
     int abandono = 0;
-    
+
     if (ahora - m->latido_puma >= limite_segundos) {
         m->resultado = GANA_PERROS_ABANDONO;
         abandono = 1;
@@ -205,16 +206,16 @@ void mesa_revisar_abandono(Mesa *m, int limite_segundos) {
         m->resultado = GANA_PUMA_ABANDONO;
         abandono = 1;
     }
-    
+
     // si alguien supero el limite de tiempo, el juez termina la partida
     if (abandono) {
         m->partida_activa = 0;
-        
+
         pthread_mutex_lock(&log_mutex);
-        fprintf(m->salida, "[Mesa %d] fin por abandono: %s (inactividad superior a %d segundos)\n", 
-                m->id, mesa_nombre_resultado(m->resultado), limite_segundos);
+        fprintf(m->salida, "[Mesa %d] fin por abandono: %s (inactividad superior a %d segundos)\n", m->id,
+                mesa_nombre_resultado(m->resultado), limite_segundos);
         pthread_mutex_unlock(&log_mutex);
     }
-    
+
     pthread_mutex_unlock(&m->mutex);
 }

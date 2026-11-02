@@ -1,12 +1,12 @@
 // tablero.c se encarga del tablero del komikan
 // construye el grafo, cada nodo guarda la lista de nodos con los que esta
-// conectado las casillas del 5x5 se conectan con la de la derecha y la de abajo y el triangulo se conecta a mano al final de grafo_iniciar()
-// como el grafo solo se escribe una vez al inicio del programa despues los threads solo lo leen
-// tambien arma el estado inicial del tablero (puma y perros) y lo imprime
+// conectado las casillas del 5x5 se conectan con la de la derecha y la de abajo y el triangulo se conecta a mano al
+// final de grafo_iniciar() como el grafo solo se escribe una vez al inicio del programa despues los threads solo lo
+// leen tambien arma el estado inicial del tablero (puma y perros) y lo imprime
 
-#include <stdio.h>
-#include <pthread.h>
 #include "tablero.h"
+#include <pthread.h>
+#include <stdio.h>
 
 // funcion que pone una ficha en un nodo, el id 0 es el puma y del 1 al 12 son los perros
 static void colocar_ficha(Tablero *t, int id, int nodo) {
@@ -59,7 +59,6 @@ static void agregar_arista(int a, int b) {
     vecinos[b][cantidad[b]++] = a;
 }
 
-
 // funcion que registra un salto en ambos sentidos: de a hasta c pasando por b, y de c hasta a pasando por b
 static void agregar_salto(int a, int b, int c) {
     saltos[a][cant_saltos[a]].medio = b;
@@ -104,7 +103,6 @@ static void saltos_iniciar(void) {
     agregar_salto(NODO_IZQ, 1, 6);
     agregar_salto(NODO_DER, 3, 8);
 }
-
 
 // funcion que construye todo el grafo del tablero
 void grafo_iniciar(void) {
@@ -171,7 +169,6 @@ int son_vecinos(int a, int b) {
     return 0;
 }
 
-
 // funcion que retorna cuantos saltos tiene un nodo
 int cantidad_saltos(int nodo) {
     return cant_saltos[nodo];
@@ -186,7 +183,6 @@ int salto_medio(int nodo, int i) {
 int salto_destino(int nodo, int i) {
     return saltos[nodo][i].destino;
 }
-
 
 // funcion que retorna que hay en un nodo
 EstadoCasilla estado_de(const Tablero *t, int nodo) {
@@ -298,7 +294,7 @@ int mover_puma(Tablero *t, int destino) {
             t->casilla[destino] = PUMA;
             t->pos_ficha[ID_PUMA] = destino;
             t->capturas++;
-            
+
             return MOV_CAPTURA;
         }
     }
@@ -310,7 +306,7 @@ int mover_puma(Tablero *t, int destino) {
 int puma_acorralado(const Tablero *t) {
     int pasos[MAX_VECINOS];
     int saltos_validos[MAX_SALTOS];
-    
+
     return obtener_pasos_puma(t, pasos) == 0 && obtener_saltos_puma(t, saltos_validos) == 0;
 }
 

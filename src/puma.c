@@ -22,7 +22,7 @@ void *rutina_puma(void *arg) {
             break;
         }
     }
-    
+
     return NULL;
 }
 
@@ -40,9 +40,9 @@ void puma_iniciar(Puma *puma, Mesa *m) {
 }
 
 // esperar a que termine el hilo del puma
-void puma_esperar(Puma *puma) { 
+void puma_esperar(Puma *puma) {
     // solo hace join si el thread fue creado exitosamente
     if (puma->creado) {
-        pthread_join(puma->thread, NULL); 
+        pthread_join(puma->thread, NULL);
     }
 }

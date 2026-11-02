@@ -8,31 +8,31 @@
 
 #include <stdio.h>
 
-#define FILAS 5        // filas de la cuadricula main
-#define COLUMNAS 5     //columnas de la misma cuadricula
-#define NUM_NODOS 28   // 25 casillas mas los 2 nodos intermedios y el mismisimo trono
-#define NODO_IZQ 25    //el nodo que va a la izq del triangulo
-#define NODO_DER 26    //el nodo que va a la derecha
-#define NODO_TRONO 27  // la punta del triangulo rey
-#define MAX_VECINOS 4  //maximo limite de conexiones para que un nodo no colapse
-#define NUM_PERROS 12  // cantidad de perros por partida
-#define NUM_FICHAS 13  // el puma mas los 12 perros
-#define ID_PUMA 0      // el puma tiene id 0, los perros van del 1 al 12
-#define CAPTURADO -1   // posicion de un perro que ya fue capturado
-#define MAX_SALTOS 4   // maximo de saltos que puede hacer el puma desde un nodo
+#define FILAS 5               // filas de la cuadricula main
+#define COLUMNAS 5            // columnas de la misma cuadricula
+#define NUM_NODOS 28          // 25 casillas mas los 2 nodos intermedios y el mismisimo trono
+#define NODO_IZQ 25           // el nodo que va a la izq del triangulo
+#define NODO_DER 26           // el nodo que va a la derecha
+#define NODO_TRONO 27         // la punta del triangulo rey
+#define MAX_VECINOS 4         // maximo limite de conexiones para que un nodo no colapse
+#define NUM_PERROS 12         // cantidad de perros por partida
+#define NUM_FICHAS 13         // el puma mas los 12 perros
+#define ID_PUMA 0             // el puma tiene id 0, los perros van del 1 al 12
+#define CAPTURADO -1          // posicion de un perro que ya fue capturado
+#define MAX_SALTOS 4          // maximo de saltos que puede hacer el puma desde un nodo
 #define CAPTURAS_PARA_GANAR 6 // perros que tiene que capturar el puma para ganar
-#define MOV_INVALIDO 0 // el movimiento no se pudo hacer
-#define MOV_SIMPLE 1   // el movimiento fue un paso a una casilla vecina
-#define MOV_CAPTURA 2  // el movimiento fue un salto que captura un perro
-#define SIN_GANADOR 0  // la partida sigue
-#define GANA_PUMA 1    // el puma capturo suficientes perros
-#define GANA_PERROS 2  // los perros dejaron al puma sin movimientos
+#define MOV_INVALIDO 0        // el movimiento no se pudo hacer
+#define MOV_SIMPLE 1          // el movimiento fue un paso a una casilla vecina
+#define MOV_CAPTURA 2         // el movimiento fue un salto que captura un perro
+#define SIN_GANADOR 0         // la partida sigue
+#define GANA_PUMA 1           // el puma capturo suficientes perros
+#define GANA_PERROS 2         // los perros dejaron al puma sin movimientos
 
 typedef enum { // declaracion de los estados de una casilla
-INVALIDO = -1,
-VACIO = 0,
-PUMA = 1,
-PERRO = 2
+    INVALIDO = -1,
+    VACIO = 0,
+    PUMA = 1,
+    PERRO = 2
 } EstadoCasilla;
 
 // estado completo de un tablero
@@ -42,10 +42,10 @@ typedef struct {
     int capturas;                     // perros capturados hasta ahora
 } Tablero;
 
-//funcion que arma la lista de vecinos para cada nodo se hace run una sola vez antes de lanzaar los hilos
+// funcion que arma la lista de vecinos para cada nodo se hace run una sola vez antes de lanzaar los hilos
 void grafo_iniciar(void);
 
-//retorna la cantidad de vecinos que tiene un nodo
+// retorna la cantidad de vecinos que tiene un nodo
 int cantidad_vecinos(int nodo);
 
 // retorna el vecino num i de un nodo

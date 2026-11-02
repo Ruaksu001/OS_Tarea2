@@ -35,8 +35,8 @@ typedef struct {
 
 // una partida entre dos jugadores en una mesa del pool
 struct Partida {
-    int numero;                   // numero de la partida, de 1 a N/2
-    int slot;                     // posicion de su mesa en el pool
+    int numero; // numero de la partida, de 1 a N/2
+    int slot;   // posicion de su mesa en el pool
     Jugador *puma;
     Jugador *perros;
     atomic_int jugadores_activos; // jugadores que todavia estan usando la mesa
@@ -92,11 +92,10 @@ static void *rutina_juez(void *arg) {
     Mesa *mesa = &pool_mesas[p->slot];
 
     // por ahora el tope de movimientos y la impresion del tablero usan los valores por defecto (0)
-    mesa_iniciar(mesa, p->slot + 1, config.delay_min, config.delay_max, config.seed + p->numero * 1000,
-                 0, 0, stdout);
+    mesa_iniciar(mesa, p->slot + 1, config.delay_min, config.delay_max, config.seed + p->numero * 1000, 0, 0, stdout);
 
-    printf("[Juez] mesa %d: inicia la partida %d (jugador %d puma vs jugador %d perros)\n",
-           p->slot + 1, p->numero, p->puma->id, p->perros->id);
+    printf("[Juez] mesa %d: inicia la partida %d (jugador %d puma vs jugador %d perros)\n", p->slot + 1, p->numero,
+           p->puma->id, p->perros->id);
 
     // recien con la mesa lista se avisa a los jugadores para que lancen sus fichas
     sem_post(&p->puma->emparejado);
@@ -119,8 +118,7 @@ static void *rutina_juez(void *arg) {
     }
 
     int resultado = mesa->resultado;
-    printf("[Juez] mesa %d: termina la partida %d (%s)\n", p->slot + 1, p->numero,
-           mesa_nombre_resultado(resultado));
+    printf("[Juez] mesa %d: termina la partida %d (%s)\n", p->slot + 1, p->numero, mesa_nombre_resultado(resultado));
 
     mesa_destruir(mesa);
 
@@ -320,8 +318,8 @@ int main(int argc, char *argv[]) {
         sem_init(&jugadores[i].emparejado, 0, 0);
     }
 
-    printf("[Servidor] Torneo iniciado con %d jugadores y %d mesas (semilla %u). Presiona Ctrl+C para detener.\n",
-           n, m, config.seed);
+    printf("[Servidor] Torneo iniciado con %d jugadores y %d mesas (semilla %u). Presiona Ctrl+C para detener.\n", n, m,
+           config.seed);
 
     pthread_t matchmaker;
     pthread_create(&matchmaker, NULL, rutina_matchmaker, NULL);
@@ -345,9 +343,11 @@ int main(int argc, char *argv[]) {
 
     pthread_join(matchmaker, NULL);
 
-    printf("[Servidor] Resumen: %d partidas, %d ganadas por el puma, %d por los perros, %d empates, %d abandonos, %d sin terminar\n",
-           cuenta_resultados[GANA_PUMA] + cuenta_resultados[GANA_PERROS] + cuenta_resultados[EMPATE] + 
-           cuenta_resultados[GANA_PUMA_ABANDONO] + cuenta_resultados[GANA_PERROS_ABANDONO] + cuenta_resultados[SIN_GANADOR],
+    printf("[Servidor] Resumen: %d partidas, %d ganadas por el puma, %d por los perros, %d empates, %d abandonos, %d "
+           "sin terminar\n",
+           cuenta_resultados[GANA_PUMA] + cuenta_resultados[GANA_PERROS] + cuenta_resultados[EMPATE] +
+               cuenta_resultados[GANA_PUMA_ABANDONO] + cuenta_resultados[GANA_PERROS_ABANDONO] +
+               cuenta_resultados[SIN_GANADOR],
            cuenta_resultados[GANA_PUMA], cuenta_resultados[GANA_PERROS], cuenta_resultados[EMPATE],
            cuenta_resultados[GANA_PUMA_ABANDONO] + cuenta_resultados[GANA_PERROS_ABANDONO],
            cuenta_resultados[SIN_GANADOR]);
