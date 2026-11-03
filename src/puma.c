@@ -14,7 +14,7 @@ void *rutina_puma(void *arg) {
         // esperar el rango definido con variables de delay de la mesa
         int rango = p->mesa->delay_max - p->mesa->delay_min + 1;
         int tiempo = p->mesa->delay_min + (rand_r(&seed) % rango);
-        usleep(tiempo * 1000);
+        mesa_dormir(p->mesa, tiempo);
 
         // le pide a la mesa que lo mueva, si retorna terminar sale del ciclo
         int estado = mesa_mover_puma(p->mesa, &seed);

@@ -69,7 +69,7 @@ void *rutina_perro(void *arg) {
         // esperar entre el delay minimo y maximo definido en la mesa
         int rango = p->mesa->delay_max - p->mesa->delay_min + 1;
         int tiempo_ms = p->mesa->delay_min + (rand_r(&seed) % rango);
-        usleep(tiempo_ms * 1000);
+        mesa_dormir(p->mesa, tiempo_ms);
 
         // le pide a la mesa que lo mueva, si retorna terminar sale del ciclo
         int estado = mesa_mover_perro(p->mesa, p->id, &seed);
