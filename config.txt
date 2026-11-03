@@ -1,0 +1,5 @@
+hola soy un config.txt indefenso mal formateado jaja
+
+delay_max=123
+delay_min=24324
+seed=123
