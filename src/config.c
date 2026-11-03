@@ -163,7 +163,9 @@ int cargar_config(Config *c, int argc, char *argv[]) {
                     "por defecto.\n",
                     argv[3]);
         } else {
-            printf("Archivo '%s' cargado con exito (parámetros no ingresados se inicializan por defecto):\n", argv[3]);
+            printf(
+                "Archivo '%s' cargado con exito (parámetros no ingresados o comentados se inicializan por defecto):\n",
+                argv[3]);
             printf("    - delay_min: %d ms\n", c->delay_min);
             printf("    - delay_max: %d ms\n", c->delay_max);
             printf("    - seed: %u\n", c->seed);
