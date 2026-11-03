@@ -1,4 +1,6 @@
 #include "config.h"
+#include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -11,6 +13,68 @@ void inicializar_config(Config *c) {
     c->seed = (unsigned int)time(NULL); // la seed se genera en base al tiempo
 }
 
+// NOTA: parsear_entero, parsear_seed, y parse_config se encargan de que
+// el programa no acepte valores erroneos en config.txt
+// basicamente el manejador de problemas de capa 8.
+
+// manejar valores numericos incorrectos en config.txt
+static int parsear_entero(const char *str, int *salida, int min_val, int max_val) {
+
+    char *endptr;
+    errno = 0; // variable global que entrega error que ocurre en una funcion
+    long val = strtol(str, &endptr, 10);
+
+    // ocurre cuando se ingresan valores erroneos (no numericos o vacios) como parametro
+    if (endptr == str) {
+        return 0;
+    }
+
+    // saltar espacios despues del numero
+    while (*endptr == ' ' || *endptr == '\t' || *endptr == '\r' || *endptr == '\n') {
+        endptr++;
+    }
+
+    // ignora todo despues del valor del parametro
+    if (*endptr != '\0') {
+        return 0;
+    }
+
+    // detectar overflows o valores mas grandes que los designados
+    if (errno == ERANGE || val < min_val || val > max_val) {
+        return 0;
+    }
+
+    *salida = (int)val;
+    return 1;
+}
+
+// manejar valores del parametro seed en config.txt
+static int parsear_seed(const char *str, unsigned int *salida) {
+
+    char *endptr;
+    errno = 0;
+    unsigned long val = strtoul(str, &endptr, 10);
+
+    // no se lee ningun numero
+    if (endptr == str)
+        return 0;
+
+    // saltar espacios, tabulaciones o saltos de linea
+    while (*endptr == ' ' || *endptr == '\t' || *endptr == '\r' || *endptr == '\n') {
+        endptr++;
+    }
+
+    // limpiar parametro de caracteres invalidos, detectar overflows y mantener
+    // val dentro de valores que no provoquen incendios indeseados en el computador del operador
+    if (*endptr != '\0' || errno == ERANGE || val > UINT_MAX) {
+        return 0;
+    }
+
+    *salida = (unsigned int)val;
+    return 1;
+}
+
+// verificar formato correcto de config.txt
 static int parse_config(Config *c, const char *ruta) {
 
     FILE *f = fopen(ruta, "r"); // leer el archivo desde la ruta ingresada como parametro
@@ -52,11 +116,11 @@ static int parse_config(Config *c, const char *ruta) {
         char *val = igual + 1; // el valor empieza despues del =
 
         if (strcmp(setting, "delay_min") == 0) {
-            c->delay_min = atoi(val);
+            parsear_entero(val, &c->delay_min, 1, 10000); // los delays varian entre 1ms y 10000ms
         } else if (strcmp(setting, "delay_max") == 0) {
-            c->delay_max = atoi(val);
+            parsear_entero(val, &c->delay_max, 1, 10000); // los delays varian entre 1ms y 10000ms
         } else if (strcmp(setting, "seed") == 0) {
-            c->seed = (unsigned int)strtoul(val, NULL, 10);
+            parsear_seed(val, &c->seed);
         }
     }
 

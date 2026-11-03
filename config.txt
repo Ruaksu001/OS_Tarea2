@@ -1,5 +1,7 @@
-hola soy un config.txt indefenso mal formateado jaja
+# Archivo de configuración
 
-delay_max=123
-delay_min=24324
-seed=123
+# Para aplicar configuraciones, quitar # del parámetro a configurar y modificar su valores según corresponda.
+
+# delay_max = 500
+# delay_min = 100
+# seed = 12346789
