@@ -17,6 +17,14 @@ typedef struct {
     int delay_min; // retardo minimo por movimiento en ms
     int delay_max; // retardo maximo por movimiento en ms
     unsigned seed; // semilla aleatoria para reproducibilidad de pruebas
+
+    int max_movimientos;  // tope de movimientos por partida, al llegar a el la partida queda empatada
+    int imprimir_cada;    // cada cuantos movimientos se imprime el tablero
+    int abandono_jugador; // numero del jugador que abandona su partida (0 = nadie abandona)
+    int abandono_ms;      // a los cuantos ms de empezar su partida ese jugador abandona
+
+    int tiene_disposicion;       // 1 si config.txt trae una disposicion inicial de las fichas
+    int pos_inicial[NUM_FICHAS]; // nodo inicial de cada ficha, la 0 es el puma y de la 1 a la 12 los perros
 } Config;
 
 // inicializar configuracion con valores por defecto

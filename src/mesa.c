@@ -2,14 +2,24 @@
 // cada movimiento (elegir destino, mover, escribir el log y revisar si alguien gano) se hace
 // completo con el mutex de la mesa tomado, asi solo una ficha a la vez puede cambiar el tablero
 // el unico otro mutex es el del log, que es global y siempre se toma despues del de la mesa
+// tambien tiene lo que el juez usa para vigilar la partida: abandono por inactividad y cancelacion
 
-// define necesario para que compile rand_r con -std=c17
+// define necesario para que compile rand_r, usleep y clock_gettime con -std=c17
 #define _DEFAULT_SOURCE
 #include "mesa.h"
 #include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 
 // mutex global para el logeo, evita que dos mesas mezclen lineas en el archivo de salida
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// funcion que retorna la hora actual en milisegundos con un reloj monotonico (no salta si cambian la hora del sistema)
+static long long ahora_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 
 // funcion que retorna el texto asociado al resultado
 const char *mesa_nombre_resultado(int resultado) {
@@ -23,6 +33,8 @@ const char *mesa_nombre_resultado(int resultado) {
         return "gana el puma (perros abandonaron)";
     if (resultado == GANA_PERROS_ABANDONO)
         return "ganan los perros (puma abandono)";
+    if (resultado == CANCELADA)
+        return "partida cancelada";
     return "sin ganador";
 }
 
@@ -58,15 +70,27 @@ void mesa_iniciar(Mesa *m, int id, int delay_min, int delay_max, unsigned int se
     m->resultado = SIN_GANADOR;
     m->movimientos = 0;
 
+    m->puma_caido = 0;
+    m->perros_caido = 0;
+
     pthread_mutex_init(&m->mutex, NULL);
     generar_tablero(&m->tablero);
-    m->latido_puma = time(NULL);
-    m->latido_perros = time(NULL);
+    m->latido_puma_ms = ahora_ms();
+    m->latido_perros_ms = ahora_ms();
 }
 
 // se llama solo despues de hacer join a todos los hilos
 void mesa_destruir(Mesa *m) {
     pthread_mutex_destroy(&m->mutex);
+}
+
+// duerme en tramos de 20 ms para enterarse rapido si la partida termina, en vez de dormir todo el retardo de una vez
+void mesa_dormir(Mesa *m, int ms) {
+    while (ms > 0 && m->partida_activa) {
+        int paso = ms > 20 ? 20 : ms;
+        usleep(paso * 1000);
+        ms -= paso;
+    }
 }
 
 // funcion interna que escribe el log y revisa victoria (siempre se llama con el mutex de la mesa tomado)
@@ -115,7 +139,15 @@ static void registrar_movimiento(Mesa *m, const char *quien, int origen, int des
 // encapsula la logica de pedir movimiento para un perro
 int mesa_mover_perro(Mesa *m, int id_perro, unsigned int *semilla) {
     pthread_mutex_lock(&m->mutex);
-    m->latido_perros = time(NULL);
+
+    // si el jugador perros fallo, sus fichas ya no se mueven ni marcan latido
+    if (m->perros_caido) {
+        pthread_mutex_unlock(&m->mutex);
+        return TURNO_TERMINAR;
+    }
+
+    m->latido_perros_ms = ahora_ms();
+
     // salir de inmediato si el juego termino o el perro ya fue comido
     if (!m->partida_activa || m->tablero.pos_ficha[id_perro] == CAPTURADO) {
         pthread_mutex_unlock(&m->mutex);
@@ -146,7 +178,14 @@ int mesa_mover_perro(Mesa *m, int id_perro, unsigned int *semilla) {
 // encapsula la logica de movimiento para el puma
 int mesa_mover_puma(Mesa *m, unsigned int *semilla) {
     pthread_mutex_lock(&m->mutex);
-    m->latido_puma = time(NULL);
+
+    // si el jugador puma fallo, no se mueve ni marca latido
+    if (m->puma_caido) {
+        pthread_mutex_unlock(&m->mutex);
+        return TURNO_TERMINAR;
+    }
+
+    m->latido_puma_ms = ahora_ms();
 
     if (!m->partida_activa) {
         pthread_mutex_unlock(&m->mutex);
@@ -186,8 +225,8 @@ int mesa_mover_puma(Mesa *m, unsigned int *semilla) {
     return TURNO_MOVIO;
 }
 
-// el juez llama a esto para ver si paso mucho tiempo sin que un bando se mueva
-void mesa_revisar_abandono(Mesa *m, int limite_segundos) {
+// el juez llama a esto para ver si un bando lleva mas de limite_ms sin moverse
+void mesa_revisar_abandono(Mesa *m, int limite_ms) {
     pthread_mutex_lock(&m->mutex);
 
     // si el juego ya termino, no hace nada
@@ -196,13 +235,13 @@ void mesa_revisar_abandono(Mesa *m, int limite_segundos) {
         return;
     }
 
-    time_t ahora = time(NULL);
+    long long ahora = ahora_ms();
     int abandono = 0;
 
-    if (ahora - m->latido_puma >= limite_segundos) {
+    if (ahora - m->latido_puma_ms >= limite_ms) {
         m->resultado = GANA_PERROS_ABANDONO;
         abandono = 1;
-    } else if (ahora - m->latido_perros >= limite_segundos) {
+    } else if (ahora - m->latido_perros_ms >= limite_ms) {
         m->resultado = GANA_PUMA_ABANDONO;
         abandono = 1;
     }
@@ -212,8 +251,40 @@ void mesa_revisar_abandono(Mesa *m, int limite_segundos) {
         m->partida_activa = 0;
 
         pthread_mutex_lock(&log_mutex);
-        fprintf(m->salida, "[Mesa %d] fin por abandono: %s (inactividad superior a %d segundos)\n", m->id,
-                mesa_nombre_resultado(m->resultado), limite_segundos);
+        fprintf(m->salida, "[Mesa %d] fin por abandono: %s (sin actividad por mas de %d ms)\n", m->id,
+                mesa_nombre_resultado(m->resultado), limite_ms);
+        pthread_mutex_unlock(&log_mutex);
+    }
+
+    pthread_mutex_unlock(&m->mutex);
+}
+
+// simula la falla de un jugador, sus fichas dejan de moverse y no se avisa al juez (el juez lo detecta por los latidos)
+void mesa_marcar_caido(Mesa *m, int es_puma) {
+    if (es_puma) {
+        m->puma_caido = 1;
+    } else {
+        m->perros_caido = 1;
+    }
+
+    pthread_mutex_lock(&log_mutex);
+    fprintf(m->salida, "[Mesa %d] (simulacion) el jugador %s falla y sus fichas dejan de moverse\n", m->id,
+            es_puma ? "puma" : "perros");
+    pthread_mutex_unlock(&log_mutex);
+}
+
+// cancela la partida por orden del servidor (Ctrl+C), si la partida ya habia terminado no hace nada
+void mesa_cancelar(Mesa *m) {
+    pthread_mutex_lock(&m->mutex);
+
+    if (m->partida_activa) {
+        m->resultado = CANCELADA;
+        m->partida_activa = 0;
+
+        // orden fijo de locks: mesa primero, log despues
+        pthread_mutex_lock(&log_mutex);
+        fprintf(m->salida, "[Mesa %d] partida cancelada por el servidor (capturas: %d, movimientos: %d)\n", m->id,
+                m->tablero.capturas, m->movimientos);
         pthread_mutex_unlock(&log_mutex);
     }
 

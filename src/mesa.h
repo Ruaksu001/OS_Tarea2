@@ -19,8 +19,9 @@
 #define MAX_MOVIMIENTOS_DEFECTO 1000 // tope de movimientos si el parametro no es valido
 #define IMPRIMIR_CADA_DEFECTO 50     // cada cuantos movimientos se imprime el tablero si el parametro no es valido
 
-#define GANA_PUMA_ABANDONO 4
-#define GANA_PERROS_ABANDONO 5
+#define GANA_PUMA_ABANDONO 4   // los perros dejaron de responder
+#define GANA_PERROS_ABANDONO 5 // el puma dejo de responder
+#define CANCELADA 6            // el servidor cancelo la partida (Ctrl+C)
 
 typedef struct {
     int id;                // numero de la mesa
@@ -28,7 +29,7 @@ typedef struct {
     pthread_mutex_t mutex; // protege el tablero y los contadores de la mesa
     // atomic_int para que los hilos vean siempre el valor real de la bandera aunque la lean sin el mutex
     atomic_int partida_activa;
-    int resultado;        // SIN_GANADOR, GANA_PUMA, GANA_PERROS o EMPATE
+    int resultado;        // SIN_GANADOR, GANA_PUMA, GANA_PERROS, EMPATE, abandono o CANCELADA
     int movimientos;      // movimientos hechos hasta ahora
     int max_movimientos;  // tope de movimientos, al llegar a el la partida es empate
     int imprimir_cada;    // cada cuantos movimientos se imprime el tablero
@@ -36,9 +37,11 @@ typedef struct {
     int delay_max;        // retardo maximo entre movimientos de una ficha (ms)
     unsigned int semilla; // semilla base de la mesa, cada ficha usa esta mas su id
     FILE *salida;         // donde se escribe el log (pantalla o archivo)
-    time_t latido_puma;   // guarda el ultimo momento en que el puma intento moverse
-    time_t latido_perros; // guarda el ultimo momento en que un perro intento moverse
 
+    long long latido_puma_ms;   // ultimo momento (ms) en que el puma intento moverse
+    long long latido_perros_ms; // ultimo momento (ms) en que un perro intento moverse
+    atomic_int puma_caido;      // 1 si el jugador puma fallo (abandono simulado), sus fichas dejan de moverse
+    atomic_int perros_caido;    // 1 si el jugador perros fallo (abandono simulado)
 } Mesa;
 
 // prototipos
@@ -48,6 +51,17 @@ void mesa_destruir(Mesa *m);
 int mesa_mover_perro(Mesa *m, int id_perro, unsigned int *semilla);
 int mesa_mover_puma(Mesa *m, unsigned int *semilla);
 const char *mesa_nombre_resultado(int resultado);
-void mesa_revisar_abandono(Mesa *m, int limite_segundos);
+
+// duerme ms milisegundos en tramos cortos y sale antes si la partida termina
+void mesa_dormir(Mesa *m, int ms);
+
+// el juez llama a esto para ver si un bando lleva mas de limite_ms sin moverse y declarar abandono
+void mesa_revisar_abandono(Mesa *m, int limite_ms);
+
+// simula la falla de un jugador, sus fichas dejan de moverse sin avisar al juez
+void mesa_marcar_caido(Mesa *m, int es_puma);
+
+// cancela la partida por orden del servidor, si ya habia terminado no hace nada
+void mesa_cancelar(Mesa *m);
 
 #endif

@@ -41,6 +41,50 @@ void generar_tablero(Tablero *t) {
     colocar_ficha(t, 12, 14);
 }
 
+// funcion que revisa si un arreglo de posiciones es valido para iniciar
+int tablero_validar_posiciones(const int pos[NUM_FICHAS]) {
+    for (int i = 0; i < NUM_FICHAS; i++) {
+        // verificar que el nodo exista en el grafo
+        if (pos[i] < 0 || pos[i] >= NUM_NODOS) {
+            return 0;
+        }
+        // verificar que no haya dos fichas en la misma casilla
+        for (int j = i + 1; j < NUM_FICHAS; j++) {
+            if (pos[i] == pos[j]) {
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+// funcion que arma el tablero a partir de un arreglo de posiciones validadas
+int tablero_desde_posiciones(Tablero *t, const int pos[NUM_FICHAS]) {
+    // doble validacion de seguridad
+    if (!tablero_validar_posiciones(pos)) {
+        return 0;
+    }
+
+    // limpiar todas las casillas
+    for (int n = 0; n < NUM_NODOS; n++) {
+        t->casilla[n] = VACIO;
+    }
+    t->capturas = 0;
+
+    // colocar las fichas en sus nodos respectivos
+    for (int i = 0; i < NUM_FICHAS; i++) {
+        t->pos_ficha[i] = pos[i];
+        if (i == ID_PUMA) {
+            t->casilla[pos[i]] = PUMA;
+        } else {
+            t->casilla[pos[i]] = PERRO;
+        }
+    }
+
+    return 1;
+}
+
+
 static int vecinos[NUM_NODOS][MAX_VECINOS]; // lista de vecinos de cada nodo
 static int cantidad[NUM_NODOS];             // cuantos vecinos tiene cada nodo
 

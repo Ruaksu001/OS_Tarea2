@@ -93,4 +93,10 @@ int obtener_movimientos_perro(const Tablero *t, int id_perro, int destinos_valid
 // mueve un perro a otra posicion (destino) en el tablero
 int mover_perro(Tablero *t, int id_perro, int destino);
 
+// verifica que las posiciones dadas esten dentro del tablero y no se repitan
+int tablero_validar_posiciones(const int pos[NUM_FICHAS]);
+
+// inicializa el tablero usando una disposicion especifica de posiciones
+int tablero_desde_posiciones(Tablero *t, const int pos[NUM_FICHAS]);
+
 #endif
