@@ -2,6 +2,12 @@
 
 # Para aplicar configuraciones, quitar # del parámetro a configurar y modificar su valores según corresponda.
 
-# delay_max = 500
-# delay_min = 100
-# seed = 12346789
+# delay_min = 50
+# delay_max = 300
+# seed = 123456789
+# max_movimientos = 1000
+# imprimir_cada = 50
+# abandono_jugador = 1
+# abandono_ms = 2000
+# puma = 27
+# perros = 15,16,17,18,19,20,21,22,23,24,10,14
